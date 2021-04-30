@@ -125,8 +125,9 @@ class DDPG:
         self.actor.train()
         self.actor_optimizer.zero_grad()
         # Compute loss
-        actions_pred = self.actor(sample_batch.observations)
-        actor_loss = -self.critic(sample_batch.observations, actions_pred).mean()
+        actor_loss = -self.critic(
+            sample_batch.observations, self.actor(sample_batch.observations)
+        ).mean()
         # Compute and apply gradient
         actor_loss.backward()
         if self.config.CLIP_GRADIENTS:
