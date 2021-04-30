@@ -4,7 +4,6 @@ from ccontrol.types import NumberOfSteps
 class DDPGConfig:
     # Sampling
     SKIP_FRAMES: int = 1
-    CLIP_ACTIONS: bool = True
 
     # Ornstein-Uhlenbeck noise generator
     ADD_NOISE: bool = True

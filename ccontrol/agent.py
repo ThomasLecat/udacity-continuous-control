@@ -68,8 +68,6 @@ class DDPG:
             action = self.actor(observation).squeeze().cpu().numpy()
         if add_noise:
             action += self.random_process.sample()
-        if self.config.CLIP_ACTIONS:
-            pass
         return action
 
     def train(self, num_episodes: int) -> List:
