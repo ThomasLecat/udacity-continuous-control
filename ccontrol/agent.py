@@ -119,7 +119,8 @@ class DDPG:
                     episode_length % self.config.UPDATE_EVERY == 0
                     and num_steps_sampled > self.config.LEARNING_STARTS
                 ):
-                    self.update_once()
+                    for _ in range(self.config.NUM_SGD_ITER):
+                        self.update_once()
                 if done is True:
                     break
 

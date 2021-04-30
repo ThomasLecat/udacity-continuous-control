@@ -22,7 +22,8 @@ class DDPGConfig:
     TARGET_UPDATE_COEFF: float = 1e-3
     CLIP_TD_ERROR: bool = False
     CLIP_GRADIENTS: bool = True
-    UPDATE_EVERY: NumberOfSteps = 4
+    UPDATE_EVERY: NumberOfSteps = 20
+    NUM_SGD_ITER: int = 10
 
     # Logging
     LOG_EVERY: NumberOfSteps = 10
