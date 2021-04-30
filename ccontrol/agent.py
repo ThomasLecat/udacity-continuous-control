@@ -139,16 +139,14 @@ class DDPG:
     def update_actor(self, sample_batch: TorchSampleBatch) -> None:
         """Perform one Adam update of the actor."""
         self.actor_optimizer.zero_grad()
-        actor_loss = self.compute_actor_loss(sample_batch)
+        # Compute loss
+        actions_pred = self.actor(sample_batch.observations)
+        actor_loss = -self.q_network(
+            torch.cat([sample_batch.observations, actions_pred], dim=1)
+        ).mean()
+        # Compute and apply gradient
         actor_loss.backward()
         self.actor_optimizer.step()
-
-    def compute_actor_loss(self, sample_batch: TorchSampleBatch):
-        actions = self.actor(sample_batch.observations)
-        q_values = self.q_network(
-            torch.cat([sample_batch.observations, actions], dim=1)
-        )
-        return -torch.sum(q_values)
 
     def update_critic(self, sample_batch: TorchSampleBatch) -> None:
         """Perform one Adam update on the critic."""
