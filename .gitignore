@@ -1,3 +1,12 @@
+# Reacher Unity environment
+Reacher.*
+
+# out directory created by tex to pdf conversion
+out/
+
+# PyCharm files
+.idea
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
