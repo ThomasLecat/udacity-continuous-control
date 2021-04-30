@@ -178,7 +178,7 @@ class DDPG:
         td_errors = q_values - td_targets
         if self.config.CLIP_TD_ERROR:
             td_errors = torch.clamp(td_errors, -1, 1)
-        return torch.sum(td_errors ** 2)
+        return torch.mean(td_errors ** 2)
 
     def soft_update_target_networks(self) -> None:
         """Update the target networks slowly towards the local networks.
