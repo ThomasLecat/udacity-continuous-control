@@ -146,6 +146,8 @@ class DDPG:
         ).mean()
         # Compute and apply gradient
         actor_loss.backward()
+        if self.config.CLIP_GRADIENTS:
+            torch.nn.utils.clip_grad_norm_(self.q_network.parameters(), 1)
         self.actor_optimizer.step()
 
     def update_critic(self, sample_batch: TorchSampleBatch) -> None:
@@ -153,6 +155,8 @@ class DDPG:
         self.q_optimizer.zero_grad()
         q_loss = self.compute_q_loss(sample_batch)
         q_loss.backward()
+        if self.config.CLIP_GRADIENTS:
+            torch.nn.utils.clip_grad_norm_(self.q_network.parameters(), 1)
         self.q_optimizer.step()
 
     def compute_q_loss(self, sample_batch: TorchSampleBatch) -> torch.Tensor:

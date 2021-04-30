@@ -21,6 +21,7 @@ class DDPGConfig:
     LEARNING_STARTS: NumberOfSteps = 1000
     TARGET_UPDATE_COEFF: float = 0.001
     CLIP_TD_ERROR: bool = False
+    CLIP_GRADIENTS: bool = True
     UPDATE_EVERY: NumberOfSteps = 4
 
     # Logging
