@@ -16,10 +16,10 @@ class DDPGConfig:
     BUFFER_SIZE: int = 100_000
     BATCH_SIZE: int = 64
     DISCOUNT: float = 0.99
-    ACTOR_LEARNING_RATE: float = 0.0005
-    CRITIC_LEARNING_RATE: float = 0.0005
+    ACTOR_LEARNING_RATE: float = 1e-4
+    CRITIC_LEARNING_RATE: float = 1e-3
     LEARNING_STARTS: NumberOfSteps = 1000
-    TARGET_UPDATE_COEFF: float = 0.001
+    TARGET_UPDATE_COEFF: float = 1e-3
     CLIP_TD_ERROR: bool = False
     CLIP_GRADIENTS: bool = True
     UPDATE_EVERY: NumberOfSteps = 4
