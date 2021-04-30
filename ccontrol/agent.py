@@ -61,7 +61,7 @@ class DDPG:
     def compute_action(self, observation: np.ndarray, add_noise: bool) -> np.ndarray:
         self.actor.eval()
         with torch.no_grad():
-            observation = torch.Tensor(observation).to(self.device)
+            observation = torch.from_numpy(observation).to(self.device)
             # Create fake batch dimension of one | (obs_size) -> (1, obs_size)
             observation = torch.unsqueeze(observation, dim=0)
             # (1, num_actions)
