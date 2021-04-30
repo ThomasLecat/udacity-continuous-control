@@ -5,7 +5,7 @@ import torch
 
 from ccontrol.config import DDPGConfig
 from ccontrol.environment import SingleAgentEnvWrapper
-from ccontrol.model import MultilayerPerceptron
+from ccontrol.model import Actor, Critic
 from ccontrol.random_processes import OrnsteinUhlenbeckNoise
 from ccontrol.replay_buffer import ReplayBufferInterface, SampleBatch, TorchSampleBatch
 from ccontrol.utils import convert_to_torch
@@ -32,31 +32,15 @@ class DDPG:
             torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
         )
 
-        # Create actor networks
-        self.actor = MultilayerPerceptron(
-            input_size=env.obs_size,
-            hidden_layers=[64, 64, 64],
-            output_size=env.num_actions,
-        )
-        self.target_actor = MultilayerPerceptron(
-            input_size=env.obs_size,
-            hidden_layers=[64, 64, 64],
-            output_size=env.num_actions,
-        )
-        self.target_actor.load_state_dict(self.actor.state_dict())
+        # Actor networks
+        self.actor = Actor(env.obs_size, env.num_actions).to(self.device)
+        self.actor_target = Actor(env.obs_size, env.num_actions).to(self.device)
+        self.actor_target.load_state_dict(self.actor.state_dict())
 
-        # Create Q networks (critic)
-        self.q_network = MultilayerPerceptron(
-            input_size=env.obs_size + env.num_actions,
-            hidden_layers=[64, 64],
-            output_size=1,
-        ).to(self.device)
-        self.target_q_network = MultilayerPerceptron(
-            input_size=env.obs_size + env.num_actions,
-            hidden_layers=[64, 64],
-            output_size=1,
-        ).to(self.device)
-        self.target_q_network.load_state_dict(self.q_network.state_dict())
+        # Critic networks
+        self.critic = Critic(env.obs_size, env.num_actions).to(self.device)
+        self.critic_target = Critic(env.obs_size, env.num_actions).to(self.device)
+        self.critic_target.load_state_dict(self.critic.state_dict())
 
         # Random noise process for exploration
         self.random_process = OrnsteinUhlenbeckNoise(
@@ -70,11 +54,12 @@ class DDPG:
         self.actor_optimizer = torch.optim.Adam(
             params=self.actor.parameters(), lr=config.ACTOR_LEARNING_RATE
         )
-        self.q_optimizer = torch.optim.Adam(
-            params=self.q_network.parameters(), lr=config.CRITIC_LEARNING_RATE
+        self.critic_optimizer = torch.optim.Adam(
+            params=self.critic.parameters(), lr=config.CRITIC_LEARNING_RATE
         )
 
     def compute_action(self, observation: np.ndarray, add_noise: bool) -> np.ndarray:
+        self.actor.eval()
         with torch.no_grad():
             observation = torch.Tensor(observation).to(self.device)
             # Create fake batch dimension of one | (obs_size) -> (1, obs_size)
@@ -139,33 +124,32 @@ class DDPG:
 
     def update_actor(self, sample_batch: TorchSampleBatch) -> None:
         """Perform one Adam update of the actor."""
+        self.actor.train()
         self.actor_optimizer.zero_grad()
         # Compute loss
         actions_pred = self.actor(sample_batch.observations)
-        actor_loss = -self.q_network(
-            torch.cat([sample_batch.observations, actions_pred], dim=1)
-        ).mean()
+        actor_loss = -self.critic(sample_batch.observations, actions_pred).mean()
         # Compute and apply gradient
         actor_loss.backward()
         if self.config.CLIP_GRADIENTS:
-            torch.nn.utils.clip_grad_norm_(self.q_network.parameters(), 1)
+            torch.nn.utils.clip_grad_norm_(self.actor.parameters(), 1)
         self.actor_optimizer.step()
 
     def update_critic(self, sample_batch: TorchSampleBatch) -> None:
         """Perform one Adam update on the critic."""
-        self.q_optimizer.zero_grad()
+        self.critic_optimizer.zero_grad()
         q_loss = self.compute_q_loss(sample_batch)
         q_loss.backward()
         if self.config.CLIP_GRADIENTS:
-            torch.nn.utils.clip_grad_norm_(self.q_network.parameters(), 1)
-        self.q_optimizer.step()
+            torch.nn.utils.clip_grad_norm_(self.critic.parameters(), 1)
+        self.critic_optimizer.step()
 
     def compute_q_loss(self, sample_batch: TorchSampleBatch) -> torch.Tensor:
         # Compute TD targets
         # (batch_size, num_actions)
-        actions_target_tp1 = self.target_actor(sample_batch.next_observations)
-        q_targets_tp1 = self.target_q_network(
-            torch.cat([sample_batch.next_observations, actions_target_tp1], dim=1)
+        q_targets_tp1 = self.critic_target(
+            sample_batch.next_observations,
+            self.actor_target(sample_batch.next_observations),
         )
         td_targets = (
             sample_batch.rewards
@@ -173,9 +157,7 @@ class DDPG:
         ).detach()
         # Compute TD errors
         # (batch_size)
-        q_values = self.q_network(
-            torch.cat([sample_batch.observations, sample_batch.actions], dim=1)
-        )
+        q_values = self.critic(sample_batch.observations, sample_batch.actions)
         td_errors = q_values - td_targets
         if self.config.CLIP_TD_ERROR:
             td_errors = torch.clamp(td_errors, -1, 1)
@@ -188,8 +170,8 @@ class DDPG:
         TARGET_UPDATE_COEFF, often referred as \tau in papers.
         """
         for local_network, target_network in [
-            (self.actor, self.target_actor),
-            (self.q_network, self.target_q_network),
+            (self.actor, self.actor_target),
+            (self.critic, self.critic_target),
         ]:
             target_state_dict = target_network.state_dict()
             for param_name, param_tensor in local_network.state_dict().items():

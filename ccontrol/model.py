@@ -1,38 +1,46 @@
-from typing import List
-
+import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 
-class MultilayerPerceptron(nn.Module):
-    """Simple dense network in PyTorch.
+class Actor(nn.Module):
+    """Actor Model."""
 
-    The number and shape of dense layers can be parametrized in the config file."""
-
-    def __init__(self, input_size: int, hidden_layers: List[int], output_size: int):
+    def __init__(self, state_size, action_size):
+        """Initialize model."""
         super().__init__()
-        layers = []
-        previous_layer_size = input_size
+        self.fc1 = nn.Linear(state_size, 128)
+        self.fc2 = nn.Linear(128, 128)
+        self.fc3 = nn.Linear(128, 64)
+        self.fc4 = nn.Linear(64, action_size)
 
-        # Create dense layers 1 to N-1
-        for layer_size in hidden_layers:
-            linear = nn.Linear(
-                in_features=previous_layer_size, out_features=layer_size, bias=True
-            )
-            nn.init.xavier_normal_(linear.weight, gain=1)
-            nn.init.constant_(linear.bias, 0.0)
-            layers.append(linear)
-            layers.append(nn.ReLU())
-            previous_layer_size = layer_size
+        self.bn1 = nn.BatchNorm1d(128)
 
-        # Create final layer
-        linear = nn.Linear(
-            in_features=previous_layer_size, out_features=output_size, bias=True
-        )
-        nn.init.xavier_normal_(linear.weight, gain=0.1)
-        nn.init.constant_(linear.bias, 0.0)
-        layers.append(linear)
+    def forward(self, state):
+        """Forward pass, get action from state."""
+        x = F.relu(self.bn1(self.fc1(state)))
+        x = F.relu(self.fc2(x))
+        x = F.relu(self.fc3(x))
+        return F.tanh(self.fc4(x))
 
-        self.model = nn.Sequential(*layers)
 
-    def forward(self, input_):
-        return self.model(input_)
+class Critic(nn.Module):
+    """Q-network model."""
+
+    def __init__(self, state_size, action_size):
+        """Initialize model."""
+        super(Critic, self).__init__()
+        self.fc1 = nn.Linear(state_size, 128)
+        self.fc2 = nn.Linear(128 + action_size, 128)
+        self.fc3 = nn.Linear(128, 64)
+        self.fc4 = nn.Linear(64, 1)
+
+        self.bn1 = nn.BatchNorm1d(128)
+
+    def forward(self, observation, action):
+        """Forward pass, get Q value from action and state."""
+        x = F.relu(self.bn1(self.fc1(observation)))
+        x = torch.cat((x, action), dim=1)
+        x = F.relu(self.fc2(x))
+        x = F.relu(self.fc3(x))
+        return self.fc4(x)
