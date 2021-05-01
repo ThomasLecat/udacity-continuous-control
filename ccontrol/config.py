@@ -10,11 +10,11 @@ class DDPGConfig:
     MU: float = 0.0
     THETA: float = 0.15
     SIGMA: float = 0.2
-    DT: float = 1e-1
+    DT: float = 0.5
 
     # Optimisation
-    BUFFER_SIZE: int = 100_000
-    BATCH_SIZE: int = 64
+    BUFFER_SIZE: int = 1e6
+    BATCH_SIZE: int = 128
     DISCOUNT: float = 0.99
     ACTOR_LEARNING_RATE: float = 1e-4
     CRITIC_LEARNING_RATE: float = 1e-3
@@ -25,8 +25,8 @@ class DDPGConfig:
     CLIP_TD_ERROR: bool = False
     CLIP_GRADIENTS_ACTOR: bool = False
     CLIP_GRADIENTS_CRITIC: bool = True
-    UPDATE_EVERY: NumberOfSteps = 20
-    NUM_SGD_ITER: int = 10
+    UPDATE_EVERY: NumberOfSteps = 10
+    NUM_SGD_ITER: int = 20
 
     # Logging
     LOG_EVERY: NumberOfSteps = 10
