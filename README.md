@@ -13,7 +13,9 @@ Learning program.
 to create the environment and install the dependencies.
 1. Install the project's package: `$ source activate drlnd && pip install -e .`
 1. Download the RL environment for your OS, place the file in the `ccontrol/` directory 
-and unzip (or decompress) it. 
+and unzip (or decompress) it. The repository is compatible with both the single agent
+and multi-agent versions of the environment, but hyperparameters have been optimized for
+the multi-agent one, so we recommend using this one to reproduce the results:
 
 *  Linux: click [here](https://s3-us-west-1.amazonaws.com/udacity-drlnd/P1/Reacher/Reacher_Linux.zip)
 *  Mac OSX: click [here](https://s3-us-west-1.amazonaws.com/udacity-drlnd/P1/Reacher/Reacher.app.zip)
@@ -40,7 +42,7 @@ $ source activate drlnd
 also specify the number of training episodes with the `--num_episodes` argument.
 
 At the end of training, two files are saved on disk:
-*  `dqn_checkpoint.pt`: PyTorch checkpoint containing the trained model's weights.
+*  `ddpg_checkpoint.pt`: PyTorch checkpoint containing the trained model's weights.
 *  `reward_per_episode.csv`: score of all training episodes.
 
 ### Evaluation
