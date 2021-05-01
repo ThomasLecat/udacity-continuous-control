@@ -11,6 +11,8 @@
 \usepackage{array}
 \newcolumntype{C}[1]{>{\centering\arraybackslash\hspace{0pt}}m{#1}}
 
+\usepackage{float}
+
 \setlength{\parindent}{0cm}
 
 \title{Udacity Reacher Project}
@@ -113,13 +115,14 @@
 
     \section{Results}\label{sec:results}
 
-    The reward curves are averaged over seeds and plotted below:
+    We plot the mean reward per agent per episode during training:
 
-%    \begin{figure}
-%        \centering
-%        \includegraphics[scale=0.5]{results/reward_per_episode.png}\label{fig:figure}
-%    \end{figure}
+    \begin{figure}[H]
+        \centering
+        \includegraphics[scale=0.5]{results/mean_reward_per_episode.png}\label{fig:figure}
+    \end{figure}
 
+    The environment is solves in less than 400 iterations.
 
     \section{Next steps}\label{sec:next-steps}
 
