@@ -6,10 +6,10 @@ class OrnsteinUhlenbeckNoise:
     exploration.
     """
 
-    def __init__(self, size: int, mu: float, theta: float, sigma: float, dt: float):
+    def __init__(self, shape: tuple, mu: float, theta: float, sigma: float, dt: float):
         """Initialize parameters and noise process."""
-        self.size = size
-        self.mu = np.full(shape=size, fill_value=mu, dtype=np.float32)
+        self.shape = shape
+        self.mu = np.full(shape=shape, fill_value=mu, dtype=np.float32)
         self.theta = theta
         self.sigma = sigma
         self.dt = dt
@@ -25,6 +25,6 @@ class OrnsteinUhlenbeckNoise:
         """Update internal state and return it as a noise sample."""
         dx = self.theta * (self.mu - self.state) * self.dt + self.sigma * np.sqrt(
             self.dt
-        ) * np.random.randn(self.size).astype(np.float32)
+        ) * np.random.randn(*self.shape).astype(np.float32)
         self.state += dx
         return self.state

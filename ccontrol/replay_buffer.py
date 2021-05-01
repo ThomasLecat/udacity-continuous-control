@@ -57,13 +57,20 @@ class UniformReplayBuffer(ReplayBufferInterface):
 
     def add(
         self,
-        observation: np.ndarray,
-        action: np.ndarray,
-        reward: float,
-        done: bool,
-        next_obs: np.ndarray,
+        observations: np.ndarray,
+        actions: np.ndarray,
+        rewards: np.ndarray,
+        dones: np.ndarray,
+        next_observations: np.ndarray,
     ) -> None:
-        self.buffer.append(self.transition(observation, action, reward, done, next_obs))
+        self.buffer.extend(
+            [
+                self.transition(obs, act, rew, done, next_obs)
+                for (obs, act, rew, done, next_obs) in zip(
+                    observations, actions, rewards, dones, next_observations
+                )
+            ]
+        )
 
     @property
     def transition(self) -> namedtuple:

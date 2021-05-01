@@ -4,7 +4,7 @@ import numpy as np
 import torch
 
 from ccontrol.config import DDPGConfig
-from ccontrol.environment import SingleAgentEnvWrapper
+from ccontrol.environment import MultiAgentEnvWrapper
 from ccontrol.model import Actor, Critic
 from ccontrol.random_processes import OrnsteinUhlenbeckNoise
 from ccontrol.replay_buffer import ReplayBufferInterface, SampleBatch, TorchSampleBatch
@@ -14,7 +14,7 @@ from ccontrol.utils import convert_to_torch
 class DDPG:
     def __init__(
         self,
-        env: SingleAgentEnvWrapper,
+        env: MultiAgentEnvWrapper,
         config: ClassVar[DDPGConfig],
         replay_buffer: Optional[ReplayBufferInterface],
     ):
@@ -23,7 +23,7 @@ class DDPG:
         - [ ] Dueling Q-learning
         - [ ] Prioritized Experience Replay
         """
-        self.env: SingleAgentEnvWrapper = env
+        self.env: MultiAgentEnvWrapper = env
         self.replay_buffer: Optional[ReplayBufferInterface] = replay_buffer
         self.config: ClassVar[DDPGConfig] = config
 
@@ -44,7 +44,7 @@ class DDPG:
 
         # Random noise process for exploration
         self.random_process = OrnsteinUhlenbeckNoise(
-            size=env.num_actions,
+            shape=env.action_space,
             mu=self.config.MU,
             theta=self.config.THETA,
             sigma=self.config.SIGMA,
@@ -63,62 +63,62 @@ class DDPG:
             weight_decay=config.CRITIC_WEIGHT_DECAY,
         )
 
-    def compute_action(self, observation: np.ndarray, add_noise: bool) -> np.ndarray:
+    def compute_actions(self, observations: np.ndarray, add_noise: bool) -> np.ndarray:
         self.actor.eval()
         with torch.no_grad():
-            observation = torch.from_numpy(observation).to(self.device)
-            # Create fake batch dimension of one | (obs_size) -> (1, obs_size)
-            observation = torch.unsqueeze(observation, dim=0)
-            # (1, num_actions)
-            action = self.actor(observation).squeeze().cpu().numpy()
+            # (num_agents, obs_size)
+            observations = torch.from_numpy(observations).to(self.device)
+            # (num_agents, num_actions)
+            actions = self.actor(observations).squeeze().cpu().numpy()
         if add_noise:
-            action += self.random_process.sample()
-        return action
+            actions += self.random_process.sample()
+        return actions
 
     def train(self, num_episodes: int) -> List:
         """Train the agent for 'num_episodes' and return the list of undiscounted
         cumulated rewards per episode (sum of rewards over all steps of the episode).
         """
         reward_per_episode: List[float] = []
-        num_steps_per_episode: List[int] = []
+        episodes_length: List[int] = []
         num_steps_sampled: int = 0
 
         for episode_idx in range(1, num_episodes + 1):
             # Log progress
             if episode_idx % self.config.LOG_EVERY == 0:
                 window_rewards = reward_per_episode[-self.config.LOG_EVERY :]
-                window_ep_len = num_steps_per_episode[-self.config.LOG_EVERY :]
+                window_ep_len = episodes_length[-self.config.LOG_EVERY :]
                 print(
                     f"episode {episode_idx}/{num_episodes}, "
-                    f"avg. episode reward: {sum(window_rewards) / len(window_rewards)}, "
+                    f"avg. agent reward: {sum(window_rewards) / (len(window_rewards) * self.env.num_agents)}, "
                     f"avg. episode length: {sum(window_ep_len) / len(window_ep_len)}, "
                     f"num steps sampled: {num_steps_sampled}"
                 )
 
             # Sample one episode
-            observation = self.env.reset()
+            observations = self.env.reset()
             self.random_process.reset()
             episode_length: int = 0
             episode_reward: float = 0.0
             while True:
-                action = self.compute_action(observation, self.config.ADD_NOISE)
-                next_obs, reward, done, _ = self.env.step(action)
-                self.replay_buffer.add(observation, action, reward, done, next_obs)
-                observation = next_obs
+                actions = self.compute_actions(observations, self.config.ADD_NOISE)
+                next_obs, rewards, dones, _ = self.env.step(actions)
+                self.replay_buffer.add(observations, actions, rewards, dones, next_obs)
+                observations = next_obs
                 episode_length += 1
-                episode_reward += reward
+                episode_reward += sum(rewards)
                 if (
                     episode_length % self.config.UPDATE_EVERY == 0
                     and num_steps_sampled > self.config.LEARNING_STARTS
                 ):
                     for _ in range(self.config.NUM_SGD_ITER):
                         self.update_once()
-                if done is True:
+                # stop the episode as soon as one agent is done
+                if any(dones) is True:
                     break
 
             reward_per_episode.append(episode_reward)
-            num_steps_per_episode.append(episode_length)
-            num_steps_sampled += episode_length
+            episodes_length.append(episode_length)
+            num_steps_sampled += episode_length * self.env.num_agents
         return reward_per_episode
 
     def update_once(self) -> None:

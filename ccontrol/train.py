@@ -5,7 +5,7 @@ from unityagents import UnityEnvironment
 
 from ccontrol.agent import DDPG
 from ccontrol.config import DDPGConfig
-from ccontrol.environment import SingleAgentEnvWrapper
+from ccontrol.environment import MultiAgentEnvWrapper
 from ccontrol.preprocessors import IdentityPreprocessor
 from ccontrol.replay_buffer import UniformReplayBuffer
 from ccontrol.utils import write_list_to_csv
@@ -18,7 +18,7 @@ def train(environment_path: str, num_episodes: int):
     config = DDPGConfig
     preprocessor = IdentityPreprocessor()
     env = UnityEnvironment(environment_path, no_graphics=True)
-    env = SingleAgentEnvWrapper(env, preprocessor, skip_frames=config.SKIP_FRAMES)
+    env = MultiAgentEnvWrapper(env, preprocessor, skip_frames=config.SKIP_FRAMES)
     replay_buffer = UniformReplayBuffer(config.BUFFER_SIZE)
 
     agent = DDPG(env=env, config=config, replay_buffer=replay_buffer)
