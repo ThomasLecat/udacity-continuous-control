@@ -41,7 +41,7 @@ if __name__ == "__main__":
         "--num_episodes",
         "-n",
         type=int,
-        default=500,
+        default=300,
         help="Number of episodes on which to train the agent",
     )
     args = parser.parse_args()

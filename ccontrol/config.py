@@ -13,7 +13,7 @@ class DDPGConfig:
     DT: float = 0.5
 
     # Optimisation
-    BUFFER_SIZE: int = 1e6
+    BUFFER_SIZE: int = 1_000_000
     BATCH_SIZE: int = 128
     DISCOUNT: float = 0.99
     ACTOR_LEARNING_RATE: float = 1e-4

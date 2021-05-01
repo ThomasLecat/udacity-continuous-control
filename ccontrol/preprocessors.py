@@ -10,7 +10,7 @@ class PreprocessorInterface:
 
     @abc.abstractmethod
     def observation_size(self, raw_obs_size) -> int:
-        """Return the size of the observation after preprocessing."""
+        """Return the shape of the observation after preprocessing."""
 
 
 class IdentityPreprocessor(PreprocessorInterface):

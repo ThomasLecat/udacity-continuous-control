@@ -18,10 +18,8 @@ class DDPG:
         config: ClassVar[DDPGConfig],
         replay_buffer: Optional[ReplayBufferInterface],
     ):
-        """DQN agent with the following extensions:
-        - [x] Double Q-learning
-        - [ ] Dueling Q-learning
-        - [ ] Prioritized Experience Replay
+        """DDPG agent with Ornstein-Uhlenbeck noise for exploration, adapted to
+        multi-agents environments (independent agents).
         """
         self.env: MultiAgentEnvWrapper = env
         self.replay_buffer: Optional[ReplayBufferInterface] = replay_buffer
