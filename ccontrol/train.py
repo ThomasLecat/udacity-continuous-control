@@ -25,8 +25,8 @@ def train(environment_path: str, num_episodes: int):
     reward_per_episode = agent.train(num_episodes=num_episodes)
     with open("reward_per_episode.csv", "w") as f:
         write_list_to_csv(f, reward_per_episode)
-    with open("ddpg_checkpoint.pt", "wb") as f:
-        torch.save(agent.q_network, f)
+    with open("ddpg_actor_checkpoint.pt", "wb") as f:
+        torch.save(agent.actor, f)
 
 
 if __name__ == "__main__":
