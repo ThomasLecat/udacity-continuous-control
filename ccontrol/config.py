@@ -20,7 +20,8 @@ class DDPGConfig:
     LEARNING_STARTS: NumberOfSteps = 1000
     TARGET_UPDATE_COEFF: float = 1e-3
     CLIP_TD_ERROR: bool = False
-    CLIP_GRADIENTS: bool = True
+    CLIP_GRADIENTS_ACTOR: bool = False
+    CLIP_GRADIENTS_CRITIC: bool = True
     UPDATE_EVERY: NumberOfSteps = 20
     NUM_SGD_ITER: int = 10
 
