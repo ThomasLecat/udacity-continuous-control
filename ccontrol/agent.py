@@ -80,15 +80,18 @@ class DDPG:
         cumulated rewards per episode (sum of rewards over all steps of the episode).
         """
         reward_per_episode: List[float] = []
+        num_steps_per_episode: List[int] = []
         num_steps_sampled: int = 0
 
         for episode_idx in range(1, num_episodes + 1):
             # Log progress
             if episode_idx % self.config.LOG_EVERY == 0:
                 window_rewards = reward_per_episode[-self.config.LOG_EVERY :]
+                window_ep_len = num_steps_per_episode[-self.config.LOG_EVERY :]
                 print(
                     f"episode {episode_idx}/{num_episodes}, "
                     f"avg. episode reward: {sum(window_rewards) / len(window_rewards)}, "
+                    f"avg. episode length: {sum(window_ep_len) / len(window_ep_len)}, "
                     f"num steps sampled: {num_steps_sampled}"
                 )
 
@@ -114,6 +117,7 @@ class DDPG:
                     break
 
             reward_per_episode.append(episode_reward)
+            num_steps_per_episode.append(episode_length)
             num_steps_sampled += episode_length
         return reward_per_episode
 
