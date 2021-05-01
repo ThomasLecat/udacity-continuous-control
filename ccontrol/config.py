@@ -10,6 +10,7 @@ class DDPGConfig:
     MU: float = 0.0
     THETA: float = 0.15
     SIGMA: float = 0.2
+    DT: float = 1e-1
 
     # Optimisation
     BUFFER_SIZE: int = 100_000

@@ -48,6 +48,7 @@ class DDPG:
             mu=self.config.MU,
             theta=self.config.THETA,
             sigma=self.config.SIGMA,
+            dt=self.config.DT,
         )
 
         # Optimizers
@@ -93,6 +94,7 @@ class DDPG:
 
             # Sample one episode
             observation = self.env.reset()
+            self.random_process.reset()
             episode_length: int = 0
             episode_reward: float = 0.0
             while True:
