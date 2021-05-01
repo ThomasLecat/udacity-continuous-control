@@ -25,8 +25,8 @@ class DDPGConfig:
     CLIP_TD_ERROR: bool = False
     CLIP_GRADIENTS_ACTOR: bool = False
     CLIP_GRADIENTS_CRITIC: bool = True
-    UPDATE_EVERY: NumberOfSteps = 10
-    NUM_SGD_ITER: int = 20
+    UPDATE_EVERY: NumberOfSteps = 20
+    NUM_SGD_ITER: int = 10
 
     # Logging
     LOG_EVERY: NumberOfSteps = 10
