@@ -52,10 +52,14 @@ class DDPG:
 
         # Optimizers
         self.actor_optimizer = torch.optim.Adam(
-            params=self.actor.parameters(), lr=config.ACTOR_LEARNING_RATE
+            params=self.actor.parameters(),
+            lr=config.ACTOR_LEARNING_RATE,
+            weight_decay=config.ACTOR_WEIGHT_DECAY,
         )
         self.critic_optimizer = torch.optim.Adam(
-            params=self.critic.parameters(), lr=config.CRITIC_LEARNING_RATE
+            params=self.critic.parameters(),
+            lr=config.CRITIC_LEARNING_RATE,
+            weight_decay=config.CRITIC_WEIGHT_DECAY,
         )
 
     def compute_action(self, observation: np.ndarray, add_noise: bool) -> np.ndarray:

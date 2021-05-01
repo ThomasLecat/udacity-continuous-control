@@ -17,6 +17,8 @@ class DDPGConfig:
     DISCOUNT: float = 0.99
     ACTOR_LEARNING_RATE: float = 1e-4
     CRITIC_LEARNING_RATE: float = 1e-3
+    ACTOR_WEIGHT_DECAY: float = 0.0
+    CRITIC_WEIGHT_DECAY: float = 1e-4
     LEARNING_STARTS: NumberOfSteps = 1000
     TARGET_UPDATE_COEFF: float = 1e-3
     CLIP_TD_ERROR: bool = False
